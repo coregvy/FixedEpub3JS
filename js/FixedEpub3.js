@@ -429,6 +429,7 @@ function webp2png(img) {
     ctx.drawImage(image, 0, 0);
     img.data = canvas.toDataURL('image/png');
     img.type = "image/png";
+    img.ext = "png";
   }
   image.src = img.data;
 }
