@@ -73,7 +73,7 @@ function CoverFileSelect(evt) {
         coverFO = ({ file_name: theFile.name, data: e.target.result, type: theFile.type });
         if (coverFO.type == "image/jpeg") { coverFO.ext = "jpg" }
         else if (coverFO.type == "image/png") { coverFO.ext = "png" }
-        else if (coverFO.type == "image/webp") { coverFO.ext = "webp" };
+        else if (coverFO.type == "image/webp") { webp2png(coverFO); };
         //チェックコード
         var image = new Image();
         image.src = e.target.result;
@@ -319,7 +319,7 @@ function rewriteOPF() {
     imgFO[j].id = "i-" + ('0000' + (j + 1)).slice(-3);
     if (imgFO[j].type == "image/jpeg") { imgFO[j].ext = "jpg" }
     else if (imgFO[j].type == "image/png") { imgFO[j].ext = "png" }
-    else if (imgFO[j].type == "image/webp") { imgFO[j].ext = "webp" }
+    else if (imgFO[j].type == "image/webp") { webp2png(imgFO[j]); }
     //svg: "image/svg+xml"
     //var item='\n<item media-type="image/jpeg" id="i-001" href="image/i-001.jpg"/>'
     //var itemxml = (new DOMParser()).parseFromString(item, 'text/xml');
@@ -420,6 +420,19 @@ function rewriteOPF() {
   //2重実行の防止
   return standardOPFS;
 }
+
+function webp2png(img) {
+  const image = new Image();
+  image.onload = function () {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(image, 0, 0);
+    img.data = canvas.toDataURL('image/png');
+    img.type = "image/png";
+  }
+  image.src = img.data;
+}
+
 function rewriteNAV() {
   //ナビゲーションファイル
   var navigationXml = (new DOMParser()).parseFromString(navigation, 'text/xml');
