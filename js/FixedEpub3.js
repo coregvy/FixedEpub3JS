@@ -61,7 +61,7 @@ function CoverFileSelect(evt) {
 
     // Closure to capture the file information.
     reader.onload = (function (theFile) {
-      return function (e) {
+      return async function (e) {
         // Render thumbnail.
         var span = document.createElement('span');
         span.innerHTML = ['<img class="thumb" src="', e.target.result,
@@ -73,7 +73,7 @@ function CoverFileSelect(evt) {
         coverFO = ({ file_name: theFile.name, data: e.target.result, type: theFile.type });
         if (coverFO.type == "image/jpeg") { coverFO.ext = "jpg" }
         else if (coverFO.type == "image/png") { coverFO.ext = "png" }
-        else if (coverFO.type == "image/webp") { webp2png(coverFO); };
+        else if (coverFO.type == "image/webp") { await webp2png(coverFO); };
         //チェックコード
         var image = new Image();
         image.src = e.target.result;
@@ -216,7 +216,7 @@ var layout = '@charset "UTF-8";\n\nhtml,\nbody {\n  margin:    0;\n  padding:   
 
 //EPUB3テンプレートの書換え　DOMParserを使って書き換える。
 
-function rewriteOPF() {
+async function rewriteOPF() {
   //キンドルの場合kindleOPF、それ以外はstandardOPFに設定する。
   //var flag = document.getElementById("radio1").checked;
   //if(flag){standardOPF=kindleOPF};
@@ -319,7 +319,7 @@ function rewriteOPF() {
     imgFO[j].id = "i-" + ('0000' + (j + 1)).slice(-3);
     if (imgFO[j].type == "image/jpeg") { imgFO[j].ext = "jpg" }
     else if (imgFO[j].type == "image/png") { imgFO[j].ext = "png" }
-    else if (imgFO[j].type == "image/webp") { webp2png(imgFO[j]); }
+    else if (imgFO[j].type == "image/webp") { imgFO[j] = await webp2png(imgFO[j]); }
     //svg: "image/svg+xml"
     //var item='\n<item media-type="image/jpeg" id="i-001" href="image/i-001.jpg"/>'
     //var itemxml = (new DOMParser()).parseFromString(item, 'text/xml');
@@ -422,16 +422,21 @@ function rewriteOPF() {
 }
 
 function webp2png(img) {
-  const image = new Image();
-  image.onload = function () {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(image, 0, 0);
-    img.data = canvas.toDataURL('image/png');
-    img.type = "image/png";
-    img.ext = "png";
-  }
-  image.src = img.data;
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = function () {
+      const canvas = document.createElement('canvas');
+      canvas.width = image.width;
+      canvas.height = image.height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(image, 0, 0);
+      img.data = canvas.toDataURL('image/png');
+      img.type = "image/png";
+      img.ext = "png";
+      resolve(img);
+    }
+    image.src = img.data;
+  });
 }
 
 function rewriteNAV() {
@@ -562,8 +567,8 @@ jQuery(function ($) {
     $("#demo").hide();
     return;
   }
-  $("#demo").click(function () {
-    standardOPFS = rewriteOPF();
+  $("#demo").click(async function () {
+    standardOPFS = await rewriteOPF();
     navigationS = rewriteNAV();
     ncxS = rewriteNCX();
     rewrite();
