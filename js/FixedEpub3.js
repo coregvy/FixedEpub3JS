@@ -599,4 +599,21 @@ jQuery(function ($) {
         saveAs(content, $("#title").val() + ".epub");
       });
   });
+  $("#clear").click(function () {
+    $("#title").val("");
+    $("#author1").val("");
+    $("#author2").val("");
+    $("#covertext").val("表紙");
+    $("#navtext1").val("目次");
+    $("#imgwidth").val("848");
+    $("#imgheight").val("1200");
+    $("*[name=editNav]").each(function () {
+      $(this).val("");
+    });
+    $("*[name=formNav]").remove();
+    $("#coverfile").val("");
+    $("#files").val("");
+    $("#coverthumb").empty();
+    $("#list").empty();
+  });
 });
