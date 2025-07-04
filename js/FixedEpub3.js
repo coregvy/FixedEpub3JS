@@ -616,4 +616,25 @@ jQuery(function ($) {
     $("#coverthumb").empty();
     $("#list").empty();
   });
+  $("#paste").click(function () {
+    navigator.clipboard.read().then(function (items) {
+      items.forEach(function (item) {
+        if (item.types.includes("text/plain")) {
+          item.getType("text/plain").then(function (blob) {
+            blob.text().then(function (text) {
+              console.log(text);
+              const part = text.match(/\[(.*)\s\((.*)\)\]\s(.*)/);
+              if (part) {
+                $("#title").val(part[1]);
+                $("#author1").val(part[2]);
+                $("#author2").val(part[3]);
+              } else {
+                alert("クリップボードの内容が正しくありません。");
+              }
+            });
+          });
+        }
+      });
+    });
+  });
 });
