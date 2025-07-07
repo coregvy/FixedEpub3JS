@@ -10,35 +10,6 @@ var pages = [];
 //uuid ver.4
 var objV4 = UUID.genV4();
 
-//クッキーの読み込み
-document.addEventListener("DOMContentLoaded", function () {
-  if (localStorage["datalist"]) {
-    //localstrageから読み出す
-    datalist = JSON.parse(localStorage.getItem("datalist"))
-
-    //状態の書き換え
-    binding = document.getElementById(datalist[0])
-    binding.checked = true
-    panel = document.getElementById(datalist[1])
-    panel.checked = true
-    document.getElementById('title').value = datalist[2]
-    document.getElementById('author1').value = datalist[3]
-    document.getElementById('author2').value = datalist[4]
-  }
-});
-//状態の取得
-var cookie = function () {
-  bindingid = document.querySelector('input[name="radio"]:checked').id
-  panelid = document.querySelector('input[name="radio2"]:checked').id
-  title = document.getElementById('title').value
-  author1 = document.getElementById('author1').value
-  author2 = document.getElementById('author2').value
-  var datalist = [bindingid, panelid, title, author1, author2]
-  //localstrageに保存
-  localStorage.setItem("datalist", JSON.stringify(datalist))
-}
-
-
 //イメージモーダル
 function pop(self) {
   $('#imagepreview').attr('src', $(self).attr('src'));
@@ -47,10 +18,10 @@ function pop(self) {
 }
 //表紙画像選択
 function CoverFileSelect(evt) {
-  var files = evt.target.files; // FileList object
+  const files = evt.target.files; // FileList object
 
   // Loop through the FileList and render image files as thumbnails.
-  for (var i = 0, f; f = files[i]; i++) {
+  for (let i = 0, f; f = files[i]; i++) {
 
     // Only process image files.
     if (!f.type.match('image.*')) {
@@ -99,10 +70,10 @@ document.addEventListener("DOMContentLoaded", function () {
 //ここからページ画像入力
 //連続画像ファイル読み込み
 function handleFileSelect(evt) {
-  var files = evt.target.files; // FileList object
+  const files = evt.target.files; // FileList object
 
   // Loop through the FileList and render image files as thumbnails.
-  for (var i = 0, f; f = files[i]; i++) {
+  for (let i = 0, f; f = files[i]; i++) {
 
     // Only process image files.
     if (!f.type.match('image.*')) {
@@ -298,14 +269,6 @@ async function rewriteOPF() {
   var today = new Date();
   standardOPFxml.querySelector("meta[property='dcterms:modified']").textContent = today.toISOString().slice(0, 19) + "Z";
   //イメージをロードする場合
-  /*
-  var image =new Image();
-            image.src =imgFO[1].data;
-            image.onload = function() {
-            console.log(image.width);
-            console.log(image.height);
-  };
-  */
   //manifest image
   //media-type="image/jpeg" id="i-001" href="image/i-001.jpg"
   var imgdf = standardOPFxml.createDocumentFragment();
@@ -541,7 +504,7 @@ function rewrite() {
   //ページXHTML　pagexhtml
   //pagexhtmlの初期設定
   //繰り返し page1~imgFO.lengthまで
-  var pagexhtmlXml = (new DOMParser()).parseFromString(pagexhtml, 'text/xml');
+  const pagexhtmlXml = (new DOMParser()).parseFromString(pagexhtml, 'text/xml');
   pagexhtmlXml.querySelector('title').textContent = $("#title").val();
   var viewport = pagexhtmlXml.querySelector("meta[content]");
   var svg = pagexhtmlXml.querySelector("svg[viewBox]");
@@ -573,18 +536,18 @@ jQuery(function ($) {
     ncxS = rewriteNCX();
     rewrite();
     cookie();
-    var zip = new JSZip();
+    const zip = new JSZip();
     zip.file("mimetype", "application/epub+zip");
-    var meta = zip.folder("META-INF");
+    const meta = zip.folder("META-INF");
     meta.file("container.xml", containerXML);
-    var item = zip.folder("item");
+    const item = zip.folder("item");
     item.file("standard.opf", standardOPFS);
     item.file("nav.xhtml", navigationS);
     item.file("toc.ncx", ncxS);
-    var img = zip.folder("item/image");
-    var style = zip.folder("item/style");
+    const img = zip.folder("item/image");
+    const style = zip.folder("item/style");
     style.file("fixed-layout-jp.css", layout)
-    var xhtml = zip.folder("item/xhtml");
+    const xhtml = zip.folder("item/xhtml");
     xhtml.file("p-cover.xhtml", coverxhtml);
     for (j = 0; j < imgFO.length; j++) {
       xhtml.file("p-" + ('0000' + (j + 1)).slice(-3) + ".xhtml", pages[j]);
@@ -615,6 +578,8 @@ jQuery(function ($) {
     $("#files").val("");
     $("#coverthumb").empty();
     $("#list").empty();
+    imgFO = [];
+    pages = [];
   });
   $("#paste").click(function () {
     navigator.clipboard.read().then(function (items) {
@@ -625,9 +590,9 @@ jQuery(function ($) {
               console.log(text);
               const part = text.match(/\[(.*)\s\((.*)\)\]\s(.*)/);
               if (part) {
-                $("#title").val(part[1]);
-                $("#author1").val(part[2]);
-                $("#author2").val(part[3]);
+                $("#title").val(part[3]);
+                $("#author1").val(part[1]);
+                $("#author2").val(part[2]);
               } else {
                 alert("クリップボードの内容が正しくありません。");
               }
