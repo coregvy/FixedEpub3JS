@@ -86,8 +86,7 @@ function handleFileSelect(evt) {
       return function (e) {
         // Render thumbnail.
         var span = document.createElement('span');
-        span.innerHTML = ['<img class="thumb" src="', e.target.result,
-          '" title="', theFile.name, '" onclick="pop(this) "/>'].join('');
+        span.innerHTML = `<img class="thumb" src="${e.target.result}" title="${theFile.name}" onclick="pop(this) "/>`;
         document.getElementById('list').insertBefore(span, null);
         imgFO.push({ file_name: theFile.name, data: e.target.result, type: theFile.type });
         addselect();
@@ -115,14 +114,14 @@ document.addEventListener("DOMContentLoaded", function () {
   document.getElementById("sort").addEventListener("click", mySort);
 });
 function mySort() {
-  var list = document.getElementById('list');
-  var Nlist = list.getElementsByTagName('span');
-  var myArray = Array.prototype.slice.call(Nlist);
-  var sorter = natsort();
+  const list = document.getElementById('list');
+  const Nlist = list.getElementsByTagName('span');
+  const myArray = Array.prototype.slice.call(Nlist);
+  const sorter = natsort();
   myArray.sort(function (a, b) {
     return sorter(a.firstChild.title, b.firstChild.title);
   });
-  for (var i = 0; i < myArray.length; i++) {
+  for (let i = 0; i < myArray.length; i++) {
     list.appendChild(list.removeChild(myArray[i]))
   }
 
@@ -535,7 +534,6 @@ jQuery(function ($) {
     navigationS = rewriteNAV();
     ncxS = rewriteNCX();
     rewrite();
-    cookie();
     const zip = new JSZip();
     zip.file("mimetype", "application/epub+zip");
     const meta = zip.folder("META-INF");
