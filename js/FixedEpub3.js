@@ -386,15 +386,17 @@ async function rewriteOPF() {
 function webp2png(img) {
   return new Promise((resolve, reject) => {
     const image = new Image();
+    const mime = document.getElementById('imgtype').value;
+    const ext = mime.split('/')[1];
     image.onload = function () {
       const canvas = document.createElement('canvas');
       canvas.width = image.width;
       canvas.height = image.height;
       const ctx = canvas.getContext('2d');
       ctx.drawImage(image, 0, 0);
-      img.data = canvas.toDataURL('image/png');
-      img.type = "image/png";
-      img.ext = "png";
+      img.data = canvas.toDataURL(mime);
+      img.type = mime;
+      img.ext = ext;
       resolve(img);
     }
     image.src = img.data;
