@@ -9,7 +9,8 @@ body {
 header {
     text-align: center;
     margin-bottom: 40px;
-    position: relative; /* 子要素の絶対配置のために必要 */
+    position: relative;
+    /* 子要素の絶対配置のために必要 */
 }
 
 header h1 {
@@ -27,7 +28,9 @@ header h1 {
     gap: 15px;
 }
 
-.header-controls button, .header-controls .import-label {
+.header-controls button,
+.header-controls .import-label,
+.header-controls a {
     background: none;
     border: none;
     color: #3498db;
@@ -37,7 +40,9 @@ header h1 {
     transition: color 0.2s, transform 0.2s;
 }
 
-.header-controls button:hover, .header-controls .import-label:hover {
+.header-controls button:hover,
+.header-controls .import-label:hover,
+.header-controls a:hover {
     color: #2980b9;
     transform: scale(1.1);
 }
@@ -57,7 +62,8 @@ header h1 {
 
 /* カテゴリヘッダーのボタン */
 .category-title {
-    display: flex; /* Flexboxでアイコンを右に寄せる */
+    display: flex;
+    /* Flexboxでアイコンを右に寄せる */
     justify-content: space-between;
     align-items: center;
     font-size: 1.5em;
@@ -73,7 +79,8 @@ header h1 {
     border: none;
     color: #aaa;
     cursor: pointer;
-    font-size: 0.8em; /* サイズを小さく */
+    font-size: 0.8em;
+    /* サイズを小さく */
     transition: color 0.2s;
 }
 
@@ -86,7 +93,8 @@ header h1 {
     position: relative;
     display: flex;
     align-items: center;
-    justify-content: space-between; /* ボタンを右に寄せる */
+    justify-content: space-between;
+    /* ボタンを右に寄せる */
     background-color: #ecf0f1;
     border-radius: 8px;
     padding: 12px 15px;
@@ -109,10 +117,12 @@ header h1 {
     width: 25px;
     text-align: center;
 }
+
 .link-card-content {
     display: flex;
     align-items: center;
-    flex-grow: 1; /* コンテンツが幅いっぱいに広がるように */
+    flex-grow: 1;
+    /* コンテンツが幅いっぱいに広がるように */
 }
 
 .link-card-content i {
@@ -126,7 +136,8 @@ header h1 {
 .delete-link-button {
     background: none;
     border: none;
-    color: #ff6347; /* 赤色で目立たせる */
+    color: #ff6347;
+    /* 赤色で目立たせる */
     cursor: pointer;
     font-size: 1.2em;
     transition: color 0.2s;
@@ -200,10 +211,13 @@ header h1 {
     font-size: 1em;
 }
 
-#confirm-delete, [type="submit"] {
+#confirm-delete,
+[type="submit"] {
     background-color: #e74c3c;
 }
 
-#cancel-delete, #cancel-add-link, #cancel-add-category {
+#cancel-delete,
+#cancel-add-link,
+#cancel-add-category {
     background-color: #bdc3c7;
 }

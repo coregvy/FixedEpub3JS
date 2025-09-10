@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,11 +9,17 @@
     <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet" />
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
     <header>
         <h1>My Links</h1>
         <div class="header-controls">
+            <a href="https://fontawesome.com/search?o=r&m=free" target="_blank" title="Font Awesome アイコン"><i
+                    class="fa-brands fa-font-awesome"></i></a>
+            <a href="https://remixicon.com/" target="_blank" title="Remix Icon アイコン"><i
+                    class="ri-remixicon-fill"></i></a>
+
             <button id="add-category-button" title="カテゴリを追加"><i class="fa-solid fa-folder-plus"></i></button>
             <button id="export-button" title="リンクをエクスポート"><i class="fa-solid fa-download"></i></button>
             <label for="import-input" class="import-label" title="リンクをインポート">
@@ -54,7 +61,7 @@
             </form>
         </div>
     </div>
-    
+
     <div id="add-category-dialog" class="dialog-overlay" style="display: none;">
         <div class="dialog-content">
             <h3>カテゴリを追加</h3>
@@ -71,4 +78,5 @@
 
     <script src="script.js"></script>
 </body>
+
 </html>

@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const linkUrlInput = document.getElementById('link-url');
     const linkIconInput = document.getElementById('link-icon');
     const cancelAddLinkButton = document.getElementById('cancel-add-link');
-    
+
     const deleteDialog = document.getElementById('delete-dialog');
     const deleteMessage = document.getElementById('delete-message');
     const confirmDeleteButton = document.getElementById('confirm-delete');
@@ -30,8 +30,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function getLinks() {
         const data = localStorage.getItem(STORAGE_KEY);
         return data ? JSON.parse(data) : [
-            {"category":"news","link":[{"name":"Google ニュース","url":"https://news.google.com/","icon":"fa-solid fa-newspaper"},{"name":"BBC News","url":"https://www.bbc.com/news","icon":"ri-global-line"}]},
-            {"category":"shopping","link":[{"name":"Amazon","url":"https://amazon.com/","icon":"ri-shopping-cart-fill"},{"name":"楽天","url":"https://rakuten.com/","icon":"fa-solid fa-truck"}]}
+            { "category": "news", "link": [{ "name": "Google ニュース", "url": "https://news.google.com/", "icon": "fa-newspaper" }, { "name": "BBC News", "url": "https://www.bbc.com/news", "icon": "ri-global-line" }] },
+            { "category": "shopping", "link": [{ "name": "Amazon", "url": "https://amazon.com/", "icon": "ri-shopping-cart-fill" }, { "name": "楽天", "url": "https://rakuten.com/", "icon": "fa-truck" }] }
         ];
     }
 
@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // リンク一覧のレンダリング
     function renderLinks(categories) {
         linkContainer.innerHTML = '';
-        
+
         categories.forEach(categoryData => {
             const section = document.createElement('div');
             section.classList.add('category-section');
@@ -67,11 +67,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const linkWrapper = document.createElement('a');
                 linkWrapper.href = linkItem.url;
                 linkWrapper.classList.add('link-card');
-                linkWrapper.target = '_blank';
+                // linkWrapper.target = '_blank';
 
                 const linkContent = document.createElement('div');
                 linkContent.classList.add('link-card-content');
-                
+
                 const icon = document.createElement('i');
                 const [prefix, ...iconName] = linkItem.icon.split('-');
                 if (prefix === 'fa') {
@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else if (prefix === 'ri') {
                     icon.classList.add(linkItem.icon);
                 }
-                
+
                 const linkText = document.createTextNode(linkItem.name);
 
                 linkContent.appendChild(icon);
@@ -130,7 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             };
         });
-        
+
         // リンク追加ボタン
         document.querySelectorAll('.add-link-button').forEach(button => {
             button.onclick = (e) => {
