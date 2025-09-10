@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Links Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <h1>My Links</h1>
+        <div class="header-controls">
+            <button id="add-category-button" title="カテゴリを追加"><i class="fa-solid fa-folder-plus"></i></button>
+            <button id="export-button" title="リンクをエクスポート"><i class="fa-solid fa-download"></i></button>
+            <label for="import-input" class="import-label" title="リンクをインポート">
+                <input type="file" id="import-input" accept=".json" style="display: none;">
+                <i class="fa-solid fa-upload"></i>
+            </label>
+        </div>
+    </header>
+
+    <main id="link-container">
+    </main>
+
+    <div id="delete-dialog" class="dialog-overlay" style="display: none;">
+        <div class="dialog-content">
+            <p id="delete-message"></p>
+            <div class="dialog-buttons">
+                <button id="confirm-delete">はい</button>
+                <button id="cancel-delete">いいえ</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="add-link-dialog" class="dialog-overlay" style="display: none;">
+        <div class="dialog-content">
+            <h3>リンクを追加</h3>
+            <form id="add-link-form">
+                <label for="link-category-name">カテゴリ名:</label>
+                <input type="text" id="link-category-name" readonly>
+                <label for="link-name">リンク名:</label>
+                <input type="text" id="link-name" required>
+                <label for="link-url">URL:</label>
+                <input type="url" id="link-url" required>
+                <label for="link-icon">アイコンクラス:</label>
+                <input type="text" id="link-icon" placeholder="例: fa-solid fa-user または ri-user-line" required>
+                <div class="dialog-buttons">
+                    <button type="submit">追加</button>
+                    <button type="button" id="cancel-add-link">キャンセル</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div id="add-category-dialog" class="dialog-overlay" style="display: none;">
+        <div class="dialog-content">
+            <h3>カテゴリを追加</h3>
+            <form id="add-category-form">
+                <label for="new-category-name">カテゴリ名:</label>
+                <input type="text" id="new-category-name" required>
+                <div class="dialog-buttons">
+                    <button type="submit">追加</button>
+                    <button type="button" id="cancel-add-category">キャンセル</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
