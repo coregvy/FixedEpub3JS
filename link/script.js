@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const icon = document.createElement('i');
                 const [prefix, ...iconName] = linkItem.icon.split('-');
                 if (prefix === 'fa') {
-                    icon.classList.add('fa-solid', linkItem.icon);
+                    icon.classList.add('fa-solid', ...linkItem.icon.split(' '));
                 } else if (prefix === 'ri') {
                     icon.classList.add(linkItem.icon);
                 }

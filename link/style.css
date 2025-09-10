@@ -97,7 +97,7 @@ header h1 {
     /* ボタンを右に寄せる */
     background-color: #ecf0f1;
     border-radius: 8px;
-    padding: 12px 15px;
+    padding: 12px 0 12px 10px;
     margin-bottom: 10px;
     transition: transform 0.2s, box-shadow 0.2s;
     text-decoration: none;
@@ -113,7 +113,7 @@ header h1 {
     /* アイコンの種類にかかわらず共通のスタイルを適用 */
     font-size: 1.2em;
     color: #3498db;
-    margin-right: 15px;
+    margin-right: 10px;
     width: 25px;
     text-align: center;
 }
@@ -122,7 +122,9 @@ header h1 {
     display: flex;
     align-items: center;
     flex-grow: 1;
-    /* コンテンツが幅いっぱいに広がるように */
+    text-wrap: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .link-card-content i {
