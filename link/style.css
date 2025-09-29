@@ -223,3 +223,86 @@ header h1 {
 #cancel-add-category {
     background-color: #bdc3c7;
 }
+
+/* ======================================================= */
+/* ダークモードのスタイル設定 */
+/* ブラウザがダークモードを優先している場合に適用される */
+@media (prefers-color-scheme: dark) {
+    /* 1. 基本となる色の反転 */
+    body {
+        background-color: #121212; /* 濃い灰色 */
+        color: #e0e0e0; /* 明るい灰色 */
+    }
+
+    header h1 {
+        color: #bb86fc; /* アクセントカラー */
+    }
+
+    /* 2. カテゴリセクションの背景色と影 */
+    .category-section {
+        background-color: #1e1e1e; /* 少し明るいダークグレー */
+        box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1); /* 影を明るく調整 */
+    }
+
+    .category-title {
+        color: #e0e0e0;
+        border-bottom-color: #bb86fc; /* アクセントカラーを使用 */
+    }
+
+    /* 3. リンクカードの背景色とホバー時の効果 */
+    .link-card {
+        background-color: #2c2c2c; /* カードの背景を少し濃く */
+        color: #e0e0e0;
+    }
+    
+    .link-card:hover {
+        background-color: #3a3a3a;
+        box-shadow: 0 6px 15px rgba(255, 255, 255, 0.2);
+    }
+
+    .link-card i {
+        color: #bb86fc; /* アイコンの色をアクセントカラーに */
+    }
+
+    /* 4. ヘッダーコントロールのアイコン色 */
+    .header-controls button, 
+    .header-controls .import-label, 
+    .header-controls a {
+        color: #bb86fc;
+    }
+
+    .header-controls button:hover, 
+    .header-controls .import-label:hover, 
+    .header-controls a:hover {
+        color: #cfbcff;
+    }
+
+    /* 5. ダイアログのスタイル */
+    .dialog-overlay {
+        background: rgba(255, 255, 255, 0.1); /* 半透明の白で背景を暗く */
+    }
+
+    .dialog-content {
+        background: #1e1e1e;
+        color: #e0e0e0;
+    }
+    
+    .dialog-content h3 {
+        border-bottom-color: #444;
+    }
+
+    .dialog-content input {
+        background: #333;
+        border-color: #555;
+        color: #e0e0e0;
+    }
+
+    /* 削除ボタン・追加ボタンの色の調整 */
+    #confirm-delete, [type="submit"] {
+        background-color: #cf6679; /* ダークテーマ向けの赤 */
+    }
+
+    #cancel-delete, #cancel-add-link, #cancel-add-category {
+        background-color: #444;
+    }
+}
