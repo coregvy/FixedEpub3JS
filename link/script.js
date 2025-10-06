@@ -25,6 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ローカルストレージキー
     const STORAGE_KEY = 'myLinksData';
+    const LOG_KEY = 'linkClickLog'; // ログ専用のストレージキー
 
     // リンクデータをローカルストレージから取得または初期化
     function getLinks() {
@@ -41,16 +42,92 @@ document.addEventListener('DOMContentLoaded', () => {
         renderLinks(data);
     }
 
+    // ログデータをローカルストレージから取得
+    function getLogs() {
+        const data = localStorage.getItem(LOG_KEY);
+        return data ? JSON.parse(data) : [];
+    }
+
+    // ログデータを保存・最新10件に制限
+    function saveLogs(logs) {
+        // 最新の10件に制限して保存
+        const limitedLogs = logs.slice(0, 10);
+        localStorage.setItem(LOG_KEY, JSON.stringify(limitedLogs));
+    }
+
+    // リンククリック時にログを記録
+    function logLinkClick(linkName) {
+        const now = new Date();
+        // hh:mm 形式の時刻をフォーマット
+        const time = now.getHours().toString().padStart(2, '0') + ':' +
+            now.getMinutes().toString().padStart(2, '0');
+
+        const newLogEntry = `${time} ${linkName}`;
+        const logs = getLogs();
+
+        // 新しいエントリを配列の先頭に追加
+        logs.unshift(newLogEntry);
+
+        saveLogs(logs);
+
+        // ログセクションを再描画して即座に反映
+        renderLogsSection(logs);
+    }
+
+    // ログセクション専用のレンダリング関数
+    function renderLogsSection(logs) {
+        const logsSection = document.getElementById('logs-section');
+        if (!logsSection) return; // セクションがなければ何もしない
+
+        const logList = logsSection.querySelector('.log-list');
+        if (logList) {
+            logList.innerHTML = '';
+            logs.forEach(log => {
+                const li = document.createElement('li');
+                li.textContent = log;
+                li.classList.add('log-item');
+                logList.appendChild(li);
+            });
+        }
+    }
+
     // リンク一覧のレンダリング
     function renderLinks(categories) {
         linkContainer.innerHTML = '';
 
-        categories.forEach(categoryData => {
+        categories.forEach((categoryData, index) => {
             const section = document.createElement('div');
             section.classList.add('category-section');
 
             const title = document.createElement('h2');
             title.classList.add('category-title');
+
+            // 1番目のカテゴリ
+            if (index === 0) {
+                // ログセクション
+                const logsSection = document.createElement('div');
+                logsSection.classList.add('category-section');
+                const logTitle = document.createElement('h2');
+                logTitle.classList.add('category-title');
+                logsSection.id = 'logs-section';
+                logTitle.innerHTML = `<span>最近のアクセス</span>`;
+
+                const logs = getLogs();
+                const logList = document.createElement('ul');
+                logList.classList.add('log-list');
+
+                // 初回描画
+                logs.forEach(log => {
+                    const li = document.createElement('li');
+                    li.textContent = log;
+                    li.classList.add('log-item');
+                    logList.appendChild(li);
+                });
+                logsSection.appendChild(logTitle);
+                logsSection.appendChild(logList);
+                linkContainer.appendChild(logsSection);
+            }
+            // 通常のカテゴリ
             title.innerHTML = `<span>${categoryData.category.toUpperCase()}</span>`;
 
             const categoryControls = document.createElement('span');
@@ -60,7 +137,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 <button class="delete-category-button" data-category="${categoryData.category}" title="カテゴリを削除"><i class="fa-solid fa-trash-can"></i></button>
             `;
             title.appendChild(categoryControls);
-
             section.appendChild(title);
 
             categoryData.link.forEach(linkItem => {
@@ -68,6 +144,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 linkWrapper.href = linkItem.url;
                 linkWrapper.classList.add('link-card');
                 // linkWrapper.target = '_blank';
+
+                // クリックイベントをキャッチしてログを記録
+                linkWrapper.addEventListener('click', () => {
+                    logLinkClick(linkItem.name);
+                });
 
                 const linkContent = document.createElement('div');
                 linkContent.classList.add('link-card-content');
@@ -96,10 +177,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 section.appendChild(linkWrapper);
             });
+            
 
             linkContainer.appendChild(section);
         });
-
         // 描画後にイベントリスナーを再設定
         addEventListeners();
     }
