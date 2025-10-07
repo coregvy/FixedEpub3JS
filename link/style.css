@@ -234,6 +234,8 @@ header h1 {
     list-style: none; /* リストの点マークを削除 */
     padding: 0;
     margin: 0;
+    overflow-y: auto;
+    max-height: 250px; /* ログセクションの最大高さを設定 */
 }
 
 .log-item {
