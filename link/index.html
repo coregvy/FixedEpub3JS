@@ -75,7 +75,35 @@
             </form>
         </div>
     </div>
+    <div id="script-dialog" class="dialog-overlay" style="display: none;">
+        <div class="dialog-content">
+            <h3>スクリプト設定</h3>
+            <form id="script-form">
+                <input type="hidden" id="script-category-name">
+                <input type="hidden" id="script-link-name">
 
+                <label for="script-number">実行番号 (1-8):</label>
+                <select id="script-number">
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                    <option value="7">7</option>
+                    <option value="8">8</option>
+                </select>
+
+                <label for="script-text">スクリプト内容:</label>
+                <textarea id="script-text" rows="5" placeholder="ここにスクリプトを入力してください..."></textarea>
+
+                <div class="dialog-buttons">
+                    <button type="submit" style="background-color: #3498db;">保存</button>
+                    <button type="button" id="cancel-script">キャンセル</button>
+                </div>
+            </form>
+        </div>
+    </div>
     <script src="script.js"></script>
 </body>
 

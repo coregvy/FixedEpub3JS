@@ -23,6 +23,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const confirmDeleteButton = document.getElementById('confirm-delete');
     const cancelDeleteButton = document.getElementById('cancel-delete');
 
+    const scriptDialog = document.getElementById('script-dialog');
+    const scriptForm = document.getElementById('script-form');
+    const cancelScript = document.getElementById('cancel-script');
+
     // ローカルストレージキー
     const STORAGE_KEY = 'myLinksData';
     const LOG_KEY = 'linkClickLog'; // ログ専用のストレージキー
@@ -56,7 +60,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // リンククリック時にログを記録
-    function logLinkClick(linkName) {
+    function logLinkClick(linkName, outputLog) {
+        if (!outputLog) return; // ログ出力が無効な場合は何もしない
         const now = new Date();
         // hh:mm 形式の時刻をフォーマット
         const time = now.getHours().toString().padStart(2, '0') + ':' +
@@ -98,7 +103,6 @@ document.addEventListener('DOMContentLoaded', () => {
         categories.forEach((categoryData, index) => {
             const section = document.createElement('div');
             section.classList.add('category-section');
-
             const title = document.createElement('h2');
             title.classList.add('category-title');
 
@@ -137,6 +141,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 <button class="delete-category-button" data-category="${categoryData.category}" title="カテゴリを削除"><i class="fa-solid fa-trash-can"></i></button>
             `;
             title.appendChild(categoryControls);
+            
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.checked = categoryData.outputLog || false;
+            checkbox.classList.add('log-checkbox');
+            checkbox.title = "ログ出力を有効にする";
+            checkbox.onchange = (e) => {
+                const links = getLinks();
+                const category = links.find(c => c.category === categoryData.category);
+                category.outputLog = e.target.checked;
+                saveLinks(links);
+            };
+            title.appendChild(checkbox);
+
             section.appendChild(title);
 
             categoryData.link.forEach(linkItem => {
@@ -147,7 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // クリックイベントをキャッチしてログを記録
                 linkWrapper.addEventListener('click', () => {
-                    logLinkClick(linkItem.name);
+                    logLinkClick(linkItem.name, categoryData.outputLog);
                 });
 
                 const linkContent = document.createElement('div');
@@ -167,6 +185,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 linkContent.appendChild(linkText);
                 linkWrapper.appendChild(linkContent);
 
+                // スクリプトボタン
+                const scriptBtn = document.createElement('button');
+                scriptBtn.classList.add('script-link-button');
+                scriptBtn.innerHTML = '<i class="fa-solid fa-scroll"></i>';
+                scriptBtn.title = "スクリプト設定";
+                scriptBtn.onclick = (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    openScriptDialog(categoryData.category, linkItem.name);
+                };
+                linkWrapper.appendChild(scriptBtn);
+
+                // リンク削除ボタン
                 const deleteLinkButton = document.createElement('button');
                 deleteLinkButton.classList.add('delete-link-button');
                 deleteLinkButton.title = "リンクを削除";
@@ -339,6 +370,43 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         reader.readAsText(file);
     });
+    // スクリプトダイアログ制御
+    function openScriptDialog(category, name) {
+        document.getElementById('script-category-name').value = category;
+        document.getElementById('script-link-name').value = name;
+        
+        // 保存済みのデータがあれば読み込む（オプション機能）
+        const links = getLinks();
+        const link = links.find(c => c.category === category)?.link.find(l => l.name === name);
+        if (link && link.script) {
+            document.getElementById('script-number').value = link.script.number || "1";
+            document.getElementById('script-text').value = link.script.text || "";
+        } else {
+            document.getElementById('script-text').value = "";
+        }
+
+        scriptDialog.style.display = 'flex';
+    }
+
+    scriptForm.onsubmit = (e) => {
+        e.preventDefault();
+        const category = document.getElementById('script-category-name').value;
+        const name = document.getElementById('script-link-name').value;
+        const number = document.getElementById('script-number').value;
+        const text = document.getElementById('script-text').value;
+
+        // データを更新して保存
+        const links = getLinks();
+        const cat = links.find(c => c.category === category);
+        const link = cat?.link.find(l => l.name === name);
+        if (link) {
+            link.script = { number, text };
+            saveLinks(links);
+        }
+        scriptDialog.style.display = 'none';
+    };
+
+    cancelScript.onclick = () => { scriptDialog.style.display = 'none'; };
 
     // 初期表示
     const initialLinks = getLinks();
