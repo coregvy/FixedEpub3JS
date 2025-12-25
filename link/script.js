@@ -34,6 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // リンクデータをローカルストレージから取得または初期化
     function getLinks() {
         const data = localStorage.getItem(STORAGE_KEY);
+        console.log('Loaded links data:', data);
         return data ? JSON.parse(data) : [
             { "category": "news", "link": [{ "name": "Google ニュース", "url": "https://news.google.com/", "icon": "fa-newspaper" }, { "name": "BBC News", "url": "https://www.bbc.com/news", "icon": "ri-global-line" }] },
             { "category": "shopping", "link": [{ "name": "Amazon", "url": "https://amazon.com/", "icon": "ri-shopping-cart-fill" }, { "name": "楽天", "url": "https://rakuten.com/", "icon": "fa-truck" }] }
@@ -42,6 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // リンクデータをローカルストレージに保存
     function saveLinks(data) {
+        console.log('Saving links data:', data);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
         renderLinks(data);
     }
@@ -140,8 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <button class="add-link-button" data-category="${categoryData.category}" title="リンクを追加"><i class="fa-solid fa-plus"></i></button>
                 <button class="delete-category-button" data-category="${categoryData.category}" title="カテゴリを削除"><i class="fa-solid fa-trash-can"></i></button>
             `;
-            title.appendChild(categoryControls);
-            
+
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
             checkbox.checked = categoryData.outputLog || false;
@@ -153,7 +154,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 category.outputLog = e.target.checked;
                 saveLinks(links);
             };
-            title.appendChild(checkbox);
+            categoryControls.appendChild(checkbox);
+            title.appendChild(categoryControls);
 
             section.appendChild(title);
 
@@ -165,6 +167,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // クリックイベントをキャッチしてログを記録
                 linkWrapper.addEventListener('click', () => {
+                    linkItem.lastAccessed = new Date().toLocaleString();
+                    console.log('category', categories);
+                    saveLinks(categories);
                     logLinkClick(linkItem.name, categoryData.outputLog);
                 });
 
@@ -206,6 +211,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 deleteLinkButton.innerHTML = `<i class="fa-solid fa-xmark"></i>`;
                 linkWrapper.appendChild(deleteLinkButton);
 
+                runScript(linkItem, linkWrapper);
                 section.appendChild(linkWrapper);
             });
             
@@ -412,3 +418,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const initialLinks = getLinks();
     renderLinks(initialLinks);
 });
+
+function runScript(linkItem, linkWrapper) {
+    if (linkItem.script && linkItem.script.text) {
+        try {
+            const func = new Function('element', 'item', linkItem.script.text);
+            func(linkWrapper, linkItem);
+        } catch (error) {
+            console.error(`スクリプト実行エラー (${linkItem.name}):`, error);
+        }
+    }
+}
