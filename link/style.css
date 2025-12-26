@@ -231,6 +231,7 @@ header h1 {
     cursor: pointer;
     color: white;
     font-size: 1em;
+    background-color: #808080;
 }
 
 #confirm-delete,
