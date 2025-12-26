@@ -104,6 +104,14 @@ header h1 {
     color: inherit;
 }
 
+.link-card.warn {
+    border-left: 5px solid #c8cf66;
+}
+
+.link-card.error {
+    border-left: 5px solid #e74c3c;
+}
+
 .link-card:hover {
     transform: translateY(-3px);
     box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
