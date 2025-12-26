@@ -422,8 +422,12 @@ document.addEventListener('DOMContentLoaded', () => {
 function runScript(linkItem, linkWrapper) {
     if (linkItem.script && linkItem.script.text) {
         try {
-            const func = new Function('element', 'item', linkItem.script.text);
-            func(linkWrapper, linkItem);
+            const lastAccessed = linkItem.lastAccessed ? new Date(linkItem.lastAccessed) : new Date();
+            const now = new Date();
+            const func = new Function('element', 'item', 'addClass', 'blankHour', linkItem.script.text);
+            func(linkWrapper, linkItem, (className) => {
+                linkWrapper.classList.add(className);
+            }, (now.getTime() - lastAccessed.getTime()) / (1000 * 60 * 60));
         } catch (error) {
             console.error(`スクリプト実行エラー (${linkItem.name}):`, error);
         }
