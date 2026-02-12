@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Advanced Golf - 3D Ball & Dynamic Slope</title>
+    <style>
+        body { margin: 0; padding: 0; background: #222; font-family: 'Arial', sans-serif; overflow: hidden; touch-action: none; }
+        canvas { display: block; width: 100vw; height: 100vh; }
+        #hud { position: absolute; top: 20px; left: 20px; color: white; pointer-events: none; }
+        #wind-container { width: 60px; height: 60px; border-radius: 50%; background: rgba(0,0,0,0.5); border: 2px solid white; position: relative; }
+        #wind-arrow { position: absolute; top: 50%; left: 50%; width: 4px; height: 30px; background: #ff5722; transform-origin: center; margin-left: -2px; margin-top: -15px; }
+        #wind-text { font-size: 14px; font-weight: bold; width: 60px; text-align: center; }
+        #debug-panel { position: absolute; top: 20px; right: 20px; color: #0f0; background: rgba(0,0,0,0.7); padding: 10px; font-family: monospace; font-size: 12px; pointer-events: none; border: 1px solid #0f0; display: block; }
+        #bottom-ui { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 20px; background: rgba(0,0,0,0.8); padding: 15px 30px; border-radius: 50px; border: 2px solid #555; }
+        #lie-icon { width: 50px; height: 50px; border-radius: 50%; border: 2px solid white; position: relative; overflow: hidden; background: #4dbb4d; }
+        #lie-slope { position: absolute; bottom: 24px; width: 100%; height: 2px; background: white; transform-origin: center; transition: transform 0.2s; }
+        #gauge-wrapper { position: relative; width: 220px; }
+        #dist-hint { position: absolute; top: -20px; right: 0; color: #ffeb3b; font-size: 12px; font-weight: bold; }
+        #gauge-container { width: 100%; height: 18px; background: #333; border: 2px solid white; border-radius: 9px; overflow: hidden; position: relative; }
+        #gauge-bar { width: 0%; height: 100%; background: linear-gradient(to right, #4caf50, #ffeb3b, #f44336); }
+        #perfect-line { position: absolute; left: 15%; top: 0; width: 2px; height: 100%; background: white; z-index: 3; }
+        #power-marker { position: absolute; left: 0%; top: 0; width: 3px; height: 100%; background: #ffeb3b; z-index: 2; display: none; }
+        #gauge-marker { position: absolute; left: 0%; top: 0; width: 5px; height: 100%; background: white; z-index: 4; box-shadow: 0 0 5px black; }
+        #controls { display: flex; flex-direction: column; gap: 5px; }
+        select, button { padding: 6px 12px; font-size: 14px; border-radius: 5px; border: none; cursor: pointer; }
+        #shot-btn { background: #ff5722; color: white; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div id="debug-panel"></div>
+
+<div id="hud">
+    <div id="wind-container"><div id="wind-arrow"></div></div>
+    <div id="wind-text">0m</div>
+    <div id="score-text" style="font-size: 20px; margin-top: 10px;">Stroke: 0</div>
+    <div id="par-text" style="font-size: 16px; color: #ddd;">Par: 0</div>
+</div>
+
+<div id="bottom-ui">
+    <div id="lie-icon"><div id="lie-slope"></div></div>
+    <div id="gauge-wrapper">
+        <div id="dist-hint">MAX: 250y</div>
+        <div id="gauge-container">
+            <div id="perfect-line"></div>
+            <div id="power-marker"></div>
+            <div id="gauge-bar"></div>
+            <div id="gauge-marker"></div>
+        </div>
+    </div>
+    <div id="controls">
+        <select id="club-select">
+            <option value="250">Driver (1W)</option>
+            <option value="170">Iron (5I)</option>
+            <option value="100">Wedge (PW)</option>
+            <option value="30">Putter (PT)</option>
+        </select>
+        <button id="shot-btn">SHOT</button>
+    </div>
+</div>
+
+<canvas id="gameCanvas"></canvas>
+
+<script>
+const DEBUG_MODE = true; // デバッグパネルの表示切替
+const STOP_THRESHOLD = 0.4; // 閾値を少し上げました
+const FRICTION_BASE = 0.95; // 摩擦を少し強めました
+
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const debugPanel = document.getElementById('debug-panel');
+const powerMarker = document.getElementById('power-marker');
+const gaugeMarker = document.getElementById('gauge-marker');
+const lieIcon = document.getElementById('lie-icon');
+const lieSlope = document.getElementById('lie-slope');
+
+if (!DEBUG_MODE) debugPanel.style.display = "none";
+
+let width, height;
+// ボールに高さ(h)と初期速度比率(zSpeed)を追加
+let ball = { x: 0, y: 0, h: 0, lastX: 0, lastY: 0, vx: 0, vy: 0, vz: 0, moving: false, radius: 5 };
+let shotState = 0; 
+let gaugeVal = 0;
+let gaugeDir = 1.3;
+let power = 0;
+let angle = -Math.PI / 2;
+let score = 0;
+let currentSlope = 0;
+let groundType = "Fairway";
+let wind = { angle: Math.random() * Math.PI * 2, speed: Math.floor(Math.random() * 6) };
+
+const courseData = {
+    par: 4,
+    ballStart: { x: 0.5, y: 0.85 },
+    holePos: { x: 0.5, y: 0.15 },
+    hazards: [
+        { type: 'water', x: 0.35, y: 0.5, r: 0.08 },
+        { type: 'bunker', x: 0.65, y: 0.35, r: 0.06 }
+    ],
+    // 座標ごとの傾斜設定
+    slopeMap: [
+        { x: 0, y: 0, w: 1, h: 0.5, angle: 15 }, // 上半分は右に15度傾斜
+        { x: 0, y: 0.5, w: 0.5, h: 0.5, angle: -10 }, // 左下は左に10度
+        { x: 0.5, y: 0.5, w: 0.5, h: 0.5, angle: 5 } // 右下は右に5度
+    ]
+};
+
+function init() {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+    ball.x = ball.lastX = width * courseData.ballStart.x;
+    ball.y = ball.lastY = height * courseData.ballStart.y;
+    document.getElementById('par-text').innerText = `Par: ${courseData.par}`;
+    updateWindUI();
+    updateSlopeAtPos();
+}
+
+function updateWindUI() {
+    document.getElementById('wind-arrow').style.transform = `rotate(${wind.angle}rad)`;
+    document.getElementById('wind-text').innerText = `${wind.speed}m`;
+}
+
+function updateLieUI() {
+    const colors = { "Fairway": "#4dbb4d", "Rough": "#2e7d32", "Bunker": "#eedd82", "Green": "#7cfc00", "Water": "#2196f3" };
+    lieIcon.style.backgroundColor = colors[groundType] || "#4dbb4d";
+}
+
+function drawCourse() {
+    ctx.fillStyle = "#2e7d32";
+    ctx.fillRect(0, 0, width, height);
+    ctx.fillStyle = "#4dbb4d";
+    ctx.beginPath();
+    ctx.ellipse(width/2, height/2, width*0.25, height*0.4, 0, 0, Math.PI * 2);
+    ctx.fill();
+    courseData.hazards.forEach(h => {
+        ctx.fillStyle = h.type === 'water' ? "#2196f3" : "#eedd82";
+        ctx.beginPath(); ctx.arc(width * h.x, height * h.y, width * h.r, 0, Math.PI * 2); ctx.fill();
+    });
+    ctx.fillStyle = "#7cfc00";
+    const hx = width * courseData.holePos.x;
+    const hy = height * courseData.holePos.y;
+    ctx.beginPath(); ctx.arc(hx, hy, 50, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "black";
+    ctx.beginPath(); ctx.arc(hx, hy, 10, 0, Math.PI * 2); ctx.fill();
+    let d = Math.round(Math.hypot(ball.x - hx, ball.y - hy) / 2);
+    ctx.fillStyle = "white";
+    ctx.font = "bold 16px Arial"; ctx.textAlign = "center";
+    ctx.fillText(`${d}y`, hx, hy - 25);
+}
+
+function checkGround() {
+    const bx = Math.floor(ball.x), by = Math.floor(ball.y);
+    if (bx < 0 || bx >= width || by < 0 || by >= height) return "OB";
+    const p = ctx.getImageData(bx, by, 1, 1).data;
+    const r = p[0], g = p[1], b = p[2];
+    if (b > r && b > g && b > 150) return "Water";
+    if (r > 200 && g > 180 && b < 150) return "Bunker";
+    if (g > 240 && r < 150) return "Green";
+    if (g > 180 && r < 100) return "Fairway";
+    return "Rough";
+}
+
+// --- updateSlopeAtPos の改良 (バンカー吸い込み) ---
+function updateSlopeAtPos() {
+    let nx = ball.x / width;
+    let ny = ball.y / height;
+    let slope = 0;
+
+    // 1. バンカーの中心吸い込み判定
+    courseData.hazards.forEach(h => {
+        if (h.type === 'bunker') {
+            let dx = h.x - nx; // 中心へのX距離
+            let dy = h.y - ny; // 中心へのY距離
+            let dist = Math.hypot(dx, dy);
+            
+            if (dist < h.r) {
+                // 中心に向かうベクトルを傾斜角(angle)として擬似的に表現
+                // 中心より左(dx > 0)なら右に傾斜、右(dx < 0)なら左に傾斜
+                slope = dx * 150; 
+            }
+        }
+    });
+
+    // 2. 既存のslopeMap判定 (バンカー以外)
+    if (slope === 0) {
+        for (let s of courseData.slopeMap) {
+            if (nx >= s.x && nx <= s.x + s.w && ny >= s.y && ny <= s.y + s.h) {
+                slope = s.angle;
+                break;
+            }
+        }
+    }
+
+    currentSlope = slope;
+    lieSlope.style.transform = `rotate(${currentSlope}deg)`;
+    
+    // 3. 滞空状態の可視化：飛んでいる間はアイコンを薄くする
+    lieIcon.style.opacity = (ball.h > 1) ? "0.3" : "1.0";
+}
+
+// --- update 関数の改良 (バンカー着弾ブレーキ) ---
+function update() {
+    if (ball.moving) {
+        // 1. 高さのシミュレーション
+        if (ball.h > 0 || ball.vz > 0) {
+            ball.h += ball.vz;
+            ball.vz -= 0.25; // 重力を少し弱くして、ゆっくりした弾道に
+            
+            // 【新規】空中での池判定（即時ハザード）
+            let midGround = checkGround();
+            if (midGround === "Water") {
+                alert("Water Hazard!");
+                resetBallToLastPos();
+                return; // 更新終了
+            }
+
+            if (ball.h < 0) {
+                ball.h = 0;
+                // 着地時の挙動（クラブによって跳ね方を変える）
+                let bounceFriction = (ball.vz < -5) ? 0.3 : 0.5; 
+                ball.vz = -ball.vz * bounceFriction; 
+                if (Math.abs(ball.vz) < 0.8) ball.vz = 0;
+                
+                // バンカー着地は即停止に近い
+                if (midGround === "Bunker") {
+                    ball.vx *= 0.1; ball.vy *= 0.1; ball.vz = 0;
+                }
+            }
+        }
+
+        let nextVx = ball.vx;
+        let nextVy = ball.vy;
+
+        if (ball.h <= 0) {
+            // 接地時の摩擦
+            let f = (groundType === "Rough") ? 0.88 : (groundType === "Bunker") ? 0.4 : 0.96;
+            nextVx *= f;
+            nextVy *= f;
+
+            // 傾斜の影響
+            if (Math.hypot(nextVx, nextVy) > 0.1 || groundType === "Bunker") {
+                nextVx += Math.sin(currentSlope * Math.PI / 180) * 0.12;
+            }
+        }
+
+        // 風の影響（ゆっくり飛ぶので影響を少し調整）
+        let windEffect = (ball.h > 0) ? 1.2 : 0.2;
+        nextVx += Math.cos(wind.angle) * wind.speed * 0.0015 * windEffect;
+        nextVy += Math.sin(wind.angle) * wind.speed * 0.0015 * windEffect;
+
+        let currentSpeed = Math.hypot(nextVx, nextVy);
+        
+        if (currentSpeed < STOP_THRESHOLD && ball.h <= 0) {
+            ball.vx = 0; ball.vy = 0; ball.moving = false;
+            finalizeBallPos();
+        } else {
+            ball.vx = nextVx; ball.vy = nextVy;
+            ball.x += ball.vx; ball.y += ball.vy;
+        }
+        updateSlopeAtPos();
+    }
+
+    // デバッグパネルの更新
+    if (DEBUG_MODE) {
+        debugPanel.innerHTML = `
+            SPD: ${Math.hypot(ball.vx, ball.vy).toFixed(3)}<br>
+            H: ${ball.h.toFixed(1)} | VZ: ${ball.vz.toFixed(2)}<br>
+            GROUND: ${groundType}<br>
+            SLOPE: ${currentSlope.toFixed(1)}°<br>
+            STATE: ${shotState}
+        `;
+    }
+
+    if (shotState > 0) {
+        gaugeVal += gaugeDir;
+        if (gaugeVal >= 100) { gaugeVal = 100; gaugeDir = -1.3; }
+        if (shotState === 2 && gaugeVal <= -2) resetShotUI();
+        gaugeMarker.style.left = gaugeVal + "%";
+    }
+}
+
+// ボールを前の位置に戻す共通処理
+function resetBallToLastPos() {
+    ball.x = ball.lastX;
+    ball.y = ball.lastY;
+    ball.vx = 0; ball.vy = 0; ball.h = 0; ball.vz = 0;
+    ball.moving = false;
+    updateLieUI();
+}
+
+// ショットボタンのロジック（クラブ別軌道の設定）
+document.getElementById('shot-btn').addEventListener('click', () => {
+    if (ball.moving) return;
+
+    if (shotState === 0) {
+        // 1回目：ゲージ開始
+        shotState = 1; 
+        gaugeVal = 0; 
+        gaugeDir = 1.3;
+    } else if (shotState === 1) {
+        // 2回目：パワー決定
+        power = gaugeVal / 100;
+        powerMarker.style.left = gaugeVal + "%";
+        powerMarker.style.display = "block";
+        
+        // 【重要修正】ここで強制的に戻り方向（インパクト狙い）へ切り替える
+        gaugeDir = -1.5; // 戻りは少し速くして難易度を調整
+        shotState = 2;
+    } else if (shotState === 2) {
+        // 3回目：インパクト（打ち出し）
+        let diff = (gaugeVal - 15) / 100; 
+        let impactError = diff * 0.5;
+        let clubType = document.getElementById('club-select').value;
+        let clubPower = parseInt(clubType);
+        
+        let strength = (clubPower / 12) * power;
+        
+        ball.vx = Math.cos(angle + impactError) * strength;
+        ball.vy = Math.sin(angle + impactError) * strength;
+        
+        // クラブ別の打ち出し角(vz)設定
+        if (clubType == "250") ball.vz = 4 * power;
+        else if (clubType == "170") ball.vz = 7 * power;
+        else if (clubType == "100") ball.vz = 10 * power;
+        else ball.vz = 0;
+
+        ball.moving = true;
+        score++;
+        document.getElementById('score-text').innerText = `Stroke: ${score}`;
+        resetShotUI();
+    }
+});
+
+function finalizeBallPos() {
+    draw();
+    groundType = checkGround();
+    if (groundType === "Water" || groundType === "OB") {
+        alert(groundType === "Water" ? "Water Hazard!" : "OB!");
+        ball.x = ball.lastX; ball.y = ball.lastY;
+    } else {
+        ball.lastX = ball.x; ball.lastY = ball.y;
+    }
+    updateLieUI();
+    const hx = width * courseData.holePos.x, hy = height * courseData.holePos.y;
+    if (Math.hypot(ball.x - hx, ball.y - hy) < 15) {
+        alert("Nice In! Score: " + score);
+        location.reload();
+    }
+}
+
+function resetShotUI() {
+    shotState = 0; gaugeVal = 0; gaugeDir = 1.3;
+    powerMarker.style.display = "none";
+}
+
+function draw() {
+    ctx.clearRect(0, 0, width, height);
+    drawCourse();
+
+    if (!ball.moving && shotState === 0) {
+        ctx.strokeStyle = "rgba(255,255,255,0.4)";
+        ctx.beginPath();
+        ctx.moveTo(ball.x, ball.y);
+        ctx.lineTo(ball.x + Math.cos(angle) * 60, ball.y + Math.sin(angle) * 60);
+        ctx.stroke();
+    }
+
+    // 影の描画 (ボールの高さに応じて位置をずらす)
+    if (ball.moving || ball.h > 0) {
+        ctx.fillStyle = "rgba(0,0,0,0.3)";
+        ctx.beginPath();
+        // 影は高さに応じて少し右下にずれる
+        ctx.arc(ball.x + ball.h*0.5, ball.y + ball.h*0.5, ball.radius, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // ボールの描画 (高さに応じてサイズアップ)
+    let displayRadius = ball.radius + (ball.h * 0.15);
+    ctx.fillStyle = "white";
+    ctx.beginPath();
+    ctx.arc(ball.x, ball.y - ball.h, displayRadius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "black";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+}
+
+canvas.addEventListener('mousedown', (e) => {
+    if (!ball.moving) angle = Math.atan2(e.clientY - ball.y, e.clientX - ball.x);
+});
+
+document.getElementById('club-select').addEventListener('change', (e) => {
+    document.getElementById('dist-hint').innerText = `MAX: ${e.target.value}y`;
+});
+
+window.addEventListener('resize', init);
+init();
+function loop() { update(); draw(); requestAnimationFrame(loop); }
+loop();
+</script>
+</body>
+</html>
