@@ -1,4 +1,4 @@
-const CACHE_NAME = 'link-app-v1'; // バージョン管理用
+const CACHE_NAME = 'link-app-v2'; // バージョン管理用
 const ASSETS = [
   './',
   './index.html',
